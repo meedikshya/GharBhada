@@ -4,10 +4,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GharBhada.Models
 {
-    public class Favourite
+    public class Booking
     {
         [Key]
-        public int FavouriteId { get; set; }
+        public int BookingId { get; set; }
 
         [ForeignKey("User")]
         public int UserId { get; set; }
@@ -15,7 +15,11 @@ namespace GharBhada.Models
         [ForeignKey("Property")]
         public int PropertyId { get; set; }
 
+        [Required]
+        [MaxLength(50)]  
+        public string Status { get; set; } 
+
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime BookingDate { get; set; } = DateTime.Now;
     }
 }

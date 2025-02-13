@@ -1,17 +1,32 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GharBhada.Models
 {
     public class Payment
     {
+        [Key]
         public int PaymentId { get; set; }
-        public int RentalId { get; set; }
-        public DateTime PaymentDate { get; set; }
+
+        [ForeignKey("Agreement")]
+        public int AgreementId { get; set; }
+
+        [ForeignKey("User")]
+        public int RenterId { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(10, 2)")]
         public decimal Amount { get; set; }
-        public required string PaymentStatus { get; set; } // "Pending", "Completed"
-        public required string PaymentMethod { get; set; } // "Credit Card", "Debit Card", etc.
+
+        [Required]
+        [MaxLength(50)] 
+        public string PaymentStatus { get; set; } 
 
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public DateTime CreatedAt { get; set; }
+        public DateTime PaymentDate { get; set; } = DateTime.Now;
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }

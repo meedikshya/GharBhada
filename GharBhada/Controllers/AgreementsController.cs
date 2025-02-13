@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GharBhada.Data;
 using GharBhada.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GharBhada.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AgreementsController : ControllerBase

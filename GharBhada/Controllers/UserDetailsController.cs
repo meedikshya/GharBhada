@@ -7,52 +7,54 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GharBhada.Data;
 using GharBhada.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GharBhada.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class AdminsController : ControllerBase
+    public class UserDetailsController : ControllerBase
     {
         private readonly GharBhadaContext _context;
 
-        public AdminsController(GharBhadaContext context)
+        public UserDetailsController(GharBhadaContext context)
         {
             _context = context;
         }
 
-        // GET: api/Admins
+        // GET: api/UserDetails
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Admin>>> GetAdmins()
+        public async Task<ActionResult<IEnumerable<UserDetail>>> GetUserDetails()
         {
-            return await _context.Admins.ToListAsync();
+            return await _context.UserDetails.ToListAsync();
         }
 
-        // GET: api/Admins/5
+        // GET: api/UserDetails/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Admin>> GetAdmin(int id)
+        public async Task<ActionResult<UserDetail>> GetUserDetail(int id)
         {
-            var admin = await _context.Admins.FindAsync(id);
+            var userDetail = await _context.UserDetails.FindAsync(id);
 
-            if (admin == null)
+            if (userDetail == null)
             {
                 return NotFound();
             }
 
-            return admin;
+            return userDetail;
         }
 
-        // PUT: api/Admins/5
+        // PUT: api/UserDetails/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutAdmin(int id, Admin admin)
+        public async Task<IActionResult> PutUserDetail(int id, UserDetail userDetail)
         {
-            if (id != admin.AdminId)
+            if (id != userDetail.UserDetailId)
             {
                 return BadRequest();
             }
 
-            _context.Entry(admin).State = EntityState.Modified;
+            _context.Entry(userDetail).State = EntityState.Modified;
 
             try
             {
@@ -60,7 +62,7 @@ namespace GharBhada.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!AdminExists(id))
+                if (!UserDetailExists(id))
                 {
                     return NotFound();
                 }
@@ -73,36 +75,36 @@ namespace GharBhada.Controllers
             return NoContent();
         }
 
-        // POST: api/Admins
+        // POST: api/UserDetails
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Admin>> PostAdmin(Admin admin)
+        public async Task<ActionResult<UserDetail>> PostUserDetail(UserDetail userDetail)
         {
-            _context.Admins.Add(admin);
+            _context.UserDetails.Add(userDetail);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetAdmin", new { id = admin.AdminId }, admin);
+            return CreatedAtAction("GetUserDetail", new { id = userDetail.UserDetailId }, userDetail);
         }
 
-        // DELETE: api/Admins/5
+        // DELETE: api/UserDetails/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAdmin(int id)
+        public async Task<IActionResult> DeleteUserDetail(int id)
         {
-            var admin = await _context.Admins.FindAsync(id);
-            if (admin == null)
+            var userDetail = await _context.UserDetails.FindAsync(id);
+            if (userDetail == null)
             {
                 return NotFound();
             }
 
-            _context.Admins.Remove(admin);
+            _context.UserDetails.Remove(userDetail);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool AdminExists(int id)
+        private bool UserDetailExists(int id)
         {
-            return _context.Admins.Any(e => e.AdminId == id);
+            return _context.UserDetails.Any(e => e.UserDetailId == id);
         }
     }
 }

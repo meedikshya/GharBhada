@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GharBhada.Data;
 using GharBhada.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GharBhada.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class PropertyImagesController : ControllerBase
@@ -47,7 +49,7 @@ namespace GharBhada.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutPropertyImage(int id, PropertyImage propertyImage)
         {
-            if (id != propertyImage.ImageId)
+            if (id != propertyImage.PropertyImageId)
             {
                 return BadRequest();
             }
@@ -81,7 +83,7 @@ namespace GharBhada.Controllers
             _context.PropertyImages.Add(propertyImage);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetPropertyImage", new { id = propertyImage.ImageId }, propertyImage);
+            return CreatedAtAction("GetPropertyImage", new { id = propertyImage.PropertyImageId }, propertyImage);
         }
 
         // DELETE: api/PropertyImages/5
@@ -102,7 +104,7 @@ namespace GharBhada.Controllers
 
         private bool PropertyImageExists(int id)
         {
-            return _context.PropertyImages.Any(e => e.ImageId == id);
+            return _context.PropertyImages.Any(e => e.PropertyImageId == id);
         }
     }
 }

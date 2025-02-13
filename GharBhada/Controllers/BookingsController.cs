@@ -7,52 +7,54 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GharBhada.Data;
 using GharBhada.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GharBhada.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class RentalsController : ControllerBase
+    public class BookingsController : ControllerBase
     {
         private readonly GharBhadaContext _context;
 
-        public RentalsController(GharBhadaContext context)
+        public BookingsController(GharBhadaContext context)
         {
             _context = context;
         }
 
-        // GET: api/Rentals
+        // GET: api/Bookings
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Rental>>> GetRentals()
+        public async Task<ActionResult<IEnumerable<Booking>>> GetBookings()
         {
-            return await _context.Rentals.ToListAsync();
+            return await _context.Bookings.ToListAsync();
         }
 
-        // GET: api/Rentals/5
+        // GET: api/Bookings/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Rental>> GetRental(int id)
+        public async Task<ActionResult<Booking>> GetBooking(int id)
         {
-            var rental = await _context.Rentals.FindAsync(id);
+            var booking = await _context.Bookings.FindAsync(id);
 
-            if (rental == null)
+            if (booking == null)
             {
                 return NotFound();
             }
 
-            return rental;
+            return booking;
         }
 
-        // PUT: api/Rentals/5
+        // PUT: api/Bookings/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutRental(int id, Rental rental)
+        public async Task<IActionResult> PutBooking(int id, Booking booking)
         {
-            if (id != rental.RentalId)
+            if (id != booking.BookingId)
             {
                 return BadRequest();
             }
 
-            _context.Entry(rental).State = EntityState.Modified;
+            _context.Entry(booking).State = EntityState.Modified;
 
             try
             {
@@ -60,7 +62,7 @@ namespace GharBhada.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!RentalExists(id))
+                if (!BookingExists(id))
                 {
                     return NotFound();
                 }
@@ -73,36 +75,36 @@ namespace GharBhada.Controllers
             return NoContent();
         }
 
-        // POST: api/Rentals
+        // POST: api/Bookings
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Rental>> PostRental(Rental rental)
+        public async Task<ActionResult<Booking>> PostBooking(Booking booking)
         {
-            _context.Rentals.Add(rental);
+            _context.Bookings.Add(booking);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetRental", new { id = rental.RentalId }, rental);
+            return CreatedAtAction("GetBooking", new { id = booking.BookingId }, booking);
         }
 
-        // DELETE: api/Rentals/5
+        // DELETE: api/Bookings/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRental(int id)
+        public async Task<IActionResult> DeleteBooking(int id)
         {
-            var rental = await _context.Rentals.FindAsync(id);
-            if (rental == null)
+            var booking = await _context.Bookings.FindAsync(id);
+            if (booking == null)
             {
                 return NotFound();
             }
 
-            _context.Rentals.Remove(rental);
+            _context.Bookings.Remove(booking);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool RentalExists(int id)
+        private bool BookingExists(int id)
         {
-            return _context.Rentals.Any(e => e.RentalId == id);
+            return _context.Bookings.Any(e => e.BookingId == id);
         }
     }
 }

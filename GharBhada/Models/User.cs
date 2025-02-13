@@ -1,20 +1,28 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GharBhada.Models
 {
     public class User
     {
+        [Key]
         public int UserId { get; set; }
-        public required string Username { get; set; }
-        public required string Password { get; set; }
+
+        [Required]
+        [MaxLength(255)]
+        [EmailAddress]
         public required string Email { get; set; }
-        public string? FirstName { get; set; }
-        public string? LastName { get; set; }
-        public string? PhoneNumber { get; set; }
-        public required string Role { get; set; }
+
+        [Required]
+        [MaxLength(255)]
+        public required string PasswordHash { get; set; }
+
+        [Required]
+        [MaxLength(20)] 
+        public required string UserRole { get; set; }
 
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public DateTime? CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
-
 }
