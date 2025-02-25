@@ -1,110 +1,135 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using GharBhada.Data;
-using GharBhada.Models;
 using Microsoft.AspNetCore.Authorization;
+using AutoMapper;
+using GharBhada.Repositories.GenericRepositories;
+using GharBhada.Models;
+using GharBhada.DTOs.UserDTOs;
+using Microsoft.Extensions.Logging;
+using GharBhada.Repositories.SpecificRepositories.UserRepositories;
 
 namespace GharBhada.Controllers
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly GharBhadaContext _context;
+        private readonly IMapper _mapper;
+        private readonly IGenericRepositories _genericRepositories;
+        private readonly IUserRepositories _userRepositories;
+        private readonly ILogger<UsersController> _logger;
 
-        public UsersController(GharBhadaContext context)
+        public UsersController(IMapper mapper, IGenericRepositories genericRepositories, IUserRepositories userRepositories, ILogger<UsersController> logger)
         {
-            _context = context;
+            _mapper = mapper;
+            _genericRepositories = genericRepositories;
+            _userRepositories = userRepositories;
+            _logger = logger;
         }
 
         // GET: api/Users
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<UserReadDTO>>> GetUsers()
         {
-            return await _context.Users.ToListAsync();
+            var users = await _genericRepositories.SelectAll<User>();
+            return Ok(_mapper.Map<IEnumerable<UserReadDTO>>(users));
+        }
+
+        // GET: api/Users/firebase/{firebaseUserId}
+        [HttpGet("firebase/{firebaseUserId}")]
+        public async Task<ActionResult<int>> GetUserIdByFirebaseId(string firebaseUserId)
+        {
+            var userId = await _userRepositories.GetUserIdByFirebaseId(firebaseUserId);
+
+            if (userId == 0)
+            {
+                return NotFound(new { message = "User not found for the provided Firebase User ID." });
+            }
+
+            return Ok(userId);
+        }
+
+        // GET: api/Users/firebaseByUserId/{id}
+        [HttpGet("firebaseByUserId/{id}")]
+        public async Task<ActionResult<string>> GetFirebaseUserIdByUserId(int id)
+        {
+            var firebaseUserId = await _userRepositories.GetFirebaseUserIdByUserId(id);
+
+            if (firebaseUserId == null)
+            {
+                return NotFound(new { message = "Firebase User ID not found for the provided User ID." });
+            }
+
+            return Ok(firebaseUserId);
         }
 
         // GET: api/Users/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public async Task<ActionResult<UserReadDTO>> GetUser(int id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _genericRepositories.SelectbyId<User>(id);
 
             if (user == null)
             {
                 return NotFound();
             }
 
-            return user;
+            return Ok(_mapper.Map<UserReadDTO>(user));
         }
 
         // PUT: api/Users/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id, User user)
+        public async Task<IActionResult> PutUser(int id, UserUpdateDTO userUpdateDTO)
         {
-            if (id != user.UserId)
+            if (id != userUpdateDTO.UserId)
             {
-                return BadRequest();
+                return BadRequest(new { message = "Mismatched user ID." });
             }
 
-            _context.Entry(user).State = EntityState.Modified;
+            var existingUser = await _genericRepositories.SelectbyId<User>(id);
+            if (existingUser == null)
+            {
+                return NotFound(new { message = "User not found." });
+            }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _mapper.Map(userUpdateDTO, existingUser);
+            await _genericRepositories.UpdatebyId(id, existingUser);
 
             return NoContent();
         }
 
         // POST: api/Users
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
+        public async Task<ActionResult<UserReadDTO>> PostUser(UserCreateDTO userCreateDTO)
         {
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            var user = _mapper.Map<User>(userCreateDTO);
 
-            return CreatedAtAction("GetUser", new { id = user.UserId }, user);
+            // Ensure the role is set to 'renter' by default if not provided
+            if (string.IsNullOrEmpty(user.UserRole))
+            {
+                user.UserRole = "renter"; // Default role
+            }
+
+            await _genericRepositories.Create(user);
+            return CreatedAtAction(nameof(GetUser), new { id = user.UserId }, _mapper.Map<UserReadDTO>(user));
         }
 
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _genericRepositories.SelectbyId<User>(id);
             if (user == null)
             {
-                return NotFound();
+                return NotFound(new { message = "User not found." });
             }
 
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+            await _genericRepositories.DeleteById<User>(id);
 
             return NoContent();
-        }
-
-        private bool UserExists(int id)
-        {
-            return _context.Users.Any(e => e.UserId == id);
         }
     }
 }

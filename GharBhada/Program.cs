@@ -1,7 +1,22 @@
+using FirebaseAdmin;
+using FirebaseAdmin.Auth;
+using Google.Apis.Auth.OAuth2;
 using GharBhada.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using AutoMapper;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using GharBhada.Repositories.GenericRepositories;
+using GharBhada.Repositories.SpecificRepositories.AgreementRepositories;
+using GharBhada.Repositories.SpecificRepositories.BookingRepositories;
+using GharBhada.Repositories.SpecificRepositories.FavouriteRepositories;
+using GharBhada.Repositories.SpecificRepositories.MoveInAssistanceRepositories;
+using GharBhada.Repositories.SpecificRepositories.PaymentRepositories;
+using GharBhada.Repositories.SpecificRepositories.PropertyImageRepositories;
+using GharBhada.Repositories.SpecificRepositories.UserRepositories;
+using GharBhada.Repositories.SpecificRepositories.UserDetailRepositories;
+using GharBhada.Repositories.SpecificRepositories.PropertyRepositories;
 using MySqlConnector;
 using System.Text;
 using GharBhada.Utils;
@@ -15,6 +30,12 @@ builder.WebHost.ConfigureKestrel(options =>
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Configure AutoMapper
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+// Register AutoMapper and add the profile
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // Configure DbContext with MySQL
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -63,6 +84,30 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
 });
+
+// Firebase Initialization (using the service account key path from appsettings.json)
+var firebaseCredentialsPath = builder.Configuration["Firebase:CredentialsPath"];
+if (string.IsNullOrEmpty(firebaseCredentialsPath))
+{
+    throw new InvalidOperationException("Firebase credentials path is not configured.");
+}
+
+FirebaseApp.Create(new AppOptions()
+{
+    Credential = GoogleCredential.FromFile(firebaseCredentialsPath)
+});
+
+// Register IGenericRepositories with its implementation 
+builder.Services.AddScoped<IGenericRepositories, GenericRepositories>();
+builder.Services.AddScoped<IAgreementRepositories, AgreementRepositories>();
+builder.Services.AddScoped<IBookingRepositories, BookingRepositories>();
+builder.Services.AddScoped<IFavouriteRepositories, FavouriteRepositories>();
+builder.Services.AddScoped<IMoveInAssistanceRepositories, MoveInAssistanceRepositories>();
+builder.Services.AddScoped<IPaymentRepositories, PaymentRepositories>();
+builder.Services.AddScoped<IPropertyImageRepositories, PropertyImageRepositories>();
+builder.Services.AddScoped<IUserRepositories, UserRepositories>();
+builder.Services.AddScoped<IUserDetailRepositories, UserDetailRepositories>();
+builder.Services.AddScoped<IPropertyRepositories, PropertyRepositories>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

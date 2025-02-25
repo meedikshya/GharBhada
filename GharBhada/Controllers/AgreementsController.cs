@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using GharBhada.Data;
-using GharBhada.Models;
 using Microsoft.AspNetCore.Authorization;
+using AutoMapper;
+using GharBhada.Repositories.GenericRepositories;
+using GharBhada.DTOs.AgreementDTOs;
+using GharBhada.Models;
+using GharBhada.Repositories.SpecificRepositories.AgreementRepositories;
+using GharBhada.DTOs;
 
 namespace GharBhada.Controllers
 {
@@ -16,95 +17,93 @@ namespace GharBhada.Controllers
     [ApiController]
     public class AgreementsController : ControllerBase
     {
-        private readonly GharBhadaContext _context;
+        private readonly IMapper _mapper;
+        private readonly IGenericRepositories _genericRepositories;
+        private readonly IAgreementRepositories _agreementRepositories;
 
-        public AgreementsController(GharBhadaContext context)
+        public AgreementsController(IMapper mapper, IGenericRepositories genericRepositories, IAgreementRepositories agreementRepositories)
         {
-            _context = context;
+            _mapper = mapper;
+            _genericRepositories = genericRepositories;
+            _agreementRepositories = agreementRepositories;
         }
 
         // GET: api/Agreements
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Agreement>>> GetAgreements()
+        public async Task<ActionResult<IEnumerable<AgreementReadDTO>>> GetAgreements()
         {
-            return await _context.Agreements.ToListAsync();
+            var agreements = await _genericRepositories.SelectAll<Agreement>();
+            return Ok(_mapper.Map<IEnumerable<AgreementReadDTO>>(agreements));
         }
 
         // GET: api/Agreements/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Agreement>> GetAgreement(int id)
+        public async Task<ActionResult<AgreementReadDTO>> GetAgreement(int id)
         {
-            var agreement = await _context.Agreements.FindAsync(id);
-
+            var agreement = await _genericRepositories.SelectbyId<Agreement>(id);
             if (agreement == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Agreement not found." });
             }
+            return Ok(_mapper.Map<AgreementReadDTO>(agreement));
+        }
 
-            return agreement;
+        // GET: api/Agreements/byBookingId/{bookingId}
+        [HttpGet("byBookingId/{bookingId}")]
+        public async Task<ActionResult<AgreementReadDTO>> GetAgreementByBookingId(int bookingId)
+        {
+            var agreement = await _agreementRepositories.GetAgreementByBookingIdAsync(bookingId);
+            if (agreement == null)
+            {
+                return NotFound(new { message = "No agreement found for the given booking ID." });
+            }
+            return Ok(_mapper.Map<AgreementReadDTO>(agreement));
         }
 
         // PUT: api/Agreements/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutAgreement(int id, Agreement agreement)
+        public async Task<IActionResult> PutAgreement(int id, AgreementUpdateDTO agreementUpdateDTO)
         {
-            if (id != agreement.AgreementId)
+            if (id != agreementUpdateDTO.AgreementId)
             {
-                return BadRequest();
+                return BadRequest(new { message = "Mismatched agreement ID." });
             }
 
-            _context.Entry(agreement).State = EntityState.Modified;
+            var existingAgreement = await _genericRepositories.SelectbyId<Agreement>(id);
+            if (existingAgreement == null)
+            {
+                return NotFound(new { message = "Agreement not found." });
+            }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!AgreementExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _mapper.Map(agreementUpdateDTO, existingAgreement);
+            await _genericRepositories.UpdatebyId(id, existingAgreement);
 
             return NoContent();
         }
 
         // POST: api/Agreements
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Agreement>> PostAgreement(Agreement agreement)
+        public async Task<ActionResult<AgreementReadDTO>> PostAgreement(AgreementCreateDTO agreementCreateDTO)
         {
-            _context.Agreements.Add(agreement);
-            await _context.SaveChangesAsync();
+            var agreement = _mapper.Map<Agreement>(agreementCreateDTO);
+            await _genericRepositories.Create(agreement);
 
-            return CreatedAtAction("GetAgreement", new { id = agreement.AgreementId }, agreement);
+            return CreatedAtAction(nameof(GetAgreement), new { id = agreement.AgreementId }, _mapper.Map<AgreementReadDTO>(agreement));
         }
 
         // DELETE: api/Agreements/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAgreement(int id)
         {
-            var agreement = await _context.Agreements.FindAsync(id);
+            var agreement = await _genericRepositories.SelectbyId<Agreement>(id);
             if (agreement == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Agreement not found." });
             }
 
-            _context.Agreements.Remove(agreement);
-            await _context.SaveChangesAsync();
+            await _genericRepositories.DeleteById<Agreement>(id);
 
             return NoContent();
-        }
-
-        private bool AgreementExists(int id)
-        {
-            return _context.Agreements.Any(e => e.AgreementId == id);
         }
     }
 }

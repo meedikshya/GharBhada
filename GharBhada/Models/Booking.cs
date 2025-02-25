@@ -6,18 +6,13 @@ namespace GharBhada.Models
 {
     public class Booking
     {
-        [Key]
         public int BookingId { get; set; }
 
-        [ForeignKey("User")]
         public int UserId { get; set; }
 
-        [ForeignKey("Property")]
         public int PropertyId { get; set; }
 
-        [Required]
-        [MaxLength(50)]  
-        public string Status { get; set; } 
+        public required string Status { get; set; } 
 
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime BookingDate { get; set; } = DateTime.Now;

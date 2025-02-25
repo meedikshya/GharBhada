@@ -5,33 +5,34 @@ using System.Text;
 
 public class JwtTokenService
 {
-    private readonly IConfiguration _configuration;
+    private readonly string _secretKey;
+    private readonly string _issuer;
+    private readonly string _audience;
 
     public JwtTokenService(IConfiguration configuration)
     {
-        _configuration = configuration;
+        _secretKey = configuration["Jwt:Key"];
+        _issuer = configuration["Jwt:Issuer"];
+        _audience = configuration["Jwt:Audience"];
     }
 
-    public string GenerateToken(string userId, string role)
+    public string GenerateToken(string userId, string email)
     {
-        var jwtSettings = _configuration.GetSection("Jwt");
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, userId),
-            new Claim(ClaimTypes.Role, role),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(ClaimTypes.Email, email)
         };
 
         var token = new JwtSecurityToken(
-            issuer: jwtSettings["Issuer"],
-            audience: jwtSettings["Audience"],
+            issuer: _issuer,
+            audience: _audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(2), // Token valid for 2 hours
-            signingCredentials: creds
+            expires: DateTime.UtcNow.AddHours(1),
+            signingCredentials: credentials
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);

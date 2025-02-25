@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using GharBhada.Data;
-using GharBhada.Models;
 using Microsoft.AspNetCore.Authorization;
+using GharBhada.Repositories.GenericRepositories;
+using GharBhada.Repositories.SpecificRepositories.FavouriteRepositories;
+using GharBhada.Models;
+using AutoMapper;
+using GharBhada.DTOs.FavouriteDTOs;
 
 namespace GharBhada.Controllers
 {
@@ -16,95 +17,104 @@ namespace GharBhada.Controllers
     [ApiController]
     public class FavouritesController : ControllerBase
     {
-        private readonly GharBhadaContext _context;
+        private readonly IMapper _mapper;
+        private readonly IGenericRepositories _genericRepositories;
+        private readonly IFavouriteRepositories _favouriteRepositories;
 
-        public FavouritesController(GharBhadaContext context)
+
+        public FavouritesController(IMapper mapper, IGenericRepositories genericRepositories, IFavouriteRepositories favouriteRepositories)
         {
-            _context = context;
+            _mapper = mapper;
+            _genericRepositories = genericRepositories;
+            _favouriteRepositories = favouriteRepositories;
         }
 
         // GET: api/Favourites
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Favourite>>> GetFavourites()
+        public async Task<ActionResult<IEnumerable<FavouriteReadDTO>>> GetFavourites()
         {
-            return await _context.Favourites.ToListAsync();
+            var favourites = await _genericRepositories.SelectAll<Favourite>();
+            return Ok(_mapper.Map<IEnumerable<FavouriteReadDTO>>(favourites));
+        }
+
+        // GET: api/Favourites/user/27
+        [HttpGet("user/{userId}")]
+        public async Task<ActionResult<IEnumerable<FavouriteReadDTO>>> GetFavouritesByUserId(int userId)
+        {
+            var favourites = await _genericRepositories.SelectAll<Favourite>(f => f.UserId == userId);
+            return Ok(_mapper.Map<IEnumerable<FavouriteReadDTO>>(favourites));
         }
 
         // GET: api/Favourites/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Favourite>> GetFavourite(int id)
+        public async Task<ActionResult<FavouriteReadDTO>> GetFavourite(int id)
         {
-            var favourite = await _context.Favourites.FindAsync(id);
-
+            var favourite = await _genericRepositories.SelectbyId<Favourite>(id);
             if (favourite == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Favourite not found." });
             }
-
-            return favourite;
+            return Ok(_mapper.Map<FavouriteReadDTO>(favourite));
         }
 
         // PUT: api/Favourites/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutFavourite(int id, Favourite favourite)
+        public async Task<IActionResult> PutFavourite(int id, FavouriteUpdateDTO favouriteUpdateDTO)
         {
-            if (id != favourite.FavouriteId)
+            if (id != favouriteUpdateDTO.FavouriteId)
             {
-                return BadRequest();
+                return BadRequest(new { message = "Mismatched favourite ID." });
             }
 
-            _context.Entry(favourite).State = EntityState.Modified;
+            var existingFavourite = await _genericRepositories.SelectbyId<Favourite>(id);
+            if (existingFavourite == null)
+            {
+                return NotFound(new { message = "Favourite not found." });
+            }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!FavouriteExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _mapper.Map(favouriteUpdateDTO, existingFavourite);
+            await _genericRepositories.UpdatebyId(id, existingFavourite);
 
             return NoContent();
         }
 
         // POST: api/Favourites
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Favourite>> PostFavourite(Favourite favourite)
+        public async Task<ActionResult<FavouriteReadDTO>> PostFavourite(FavouriteCreateDTO favouriteCreateDTO)
         {
-            _context.Favourites.Add(favourite);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetFavourite", new { id = favourite.FavouriteId }, favourite);
+            var favourite = _mapper.Map<Favourite>(favouriteCreateDTO);
+            await _genericRepositories.Create(favourite);
+            return CreatedAtAction(nameof(GetFavourite), new { id = favourite.FavouriteId }, _mapper.Map<FavouriteReadDTO>(favourite));
         }
 
         // DELETE: api/Favourites/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFavourite(int id)
         {
-            var favourite = await _context.Favourites.FindAsync(id);
+            var favourite = await _genericRepositories.SelectbyId<Favourite>(id);
             if (favourite == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Favourite not found." });
             }
 
-            _context.Favourites.Remove(favourite);
-            await _context.SaveChangesAsync();
+            await _genericRepositories.DeleteById<Favourite>(id);
 
             return NoContent();
         }
 
-        private bool FavouriteExists(int id)
+        // DELETE: api/Favourites/remove?userId=27&propertyId=1
+        [HttpDelete("remove")]
+        public async Task<IActionResult> RemoveFavourite(int userId, int propertyId)
         {
-            return _context.Favourites.Any(e => e.FavouriteId == id);
+            var favourite = await _favouriteRepositories.GetFavouriteByUserIdAndPropertyIdAsync(userId, propertyId);
+            if (favourite == null)
+            {
+                return NotFound(new { message = "Favourite not found." });
+            }
+
+            await _favouriteRepositories.RemoveFavouriteAsync(favourite);
+
+            return NoContent();
         }
     }
 }

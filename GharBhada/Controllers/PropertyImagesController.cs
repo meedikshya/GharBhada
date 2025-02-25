@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using GharBhada.Data;
-using GharBhada.Models;
 using Microsoft.AspNetCore.Authorization;
+using AutoMapper;
+using GharBhada.Repositories.GenericRepositories;
+using GharBhada.Models;
+using GharBhada.DTOs.PropertyImageDTOs;
 
 namespace GharBhada.Controllers
 {
@@ -16,95 +15,78 @@ namespace GharBhada.Controllers
     [ApiController]
     public class PropertyImagesController : ControllerBase
     {
-        private readonly GharBhadaContext _context;
+        private readonly IMapper _mapper;
+        private readonly IGenericRepositories _genericRepositories;
 
-        public PropertyImagesController(GharBhadaContext context)
+        public PropertyImagesController(IMapper mapper, IGenericRepositories genericRepositories)
         {
-            _context = context;
+            _mapper = mapper;
+            _genericRepositories = genericRepositories;
         }
 
         // GET: api/PropertyImages
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<PropertyImage>>> GetPropertyImages()
+        public async Task<ActionResult<IEnumerable<PropertyImageReadDTO>>> GetPropertyImages()
         {
-            return await _context.PropertyImages.ToListAsync();
+            var propertyImages = await _genericRepositories.SelectAll<PropertyImage>();
+            return Ok(_mapper.Map<IEnumerable<PropertyImageReadDTO>>(propertyImages));
         }
 
         // GET: api/PropertyImages/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<PropertyImage>> GetPropertyImage(int id)
+        public async Task<ActionResult<PropertyImageReadDTO>> GetPropertyImage(int id)
         {
-            var propertyImage = await _context.PropertyImages.FindAsync(id);
-
+            var propertyImage = await _genericRepositories.SelectbyId<PropertyImage>(id);
             if (propertyImage == null)
             {
-                return NotFound();
+                return NotFound(new { message = "PropertyImage not found." });
             }
-
-            return propertyImage;
+            return Ok(_mapper.Map<PropertyImageReadDTO>(propertyImage));
         }
 
         // PUT: api/PropertyImages/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPropertyImage(int id, PropertyImage propertyImage)
+        public async Task<IActionResult> PutPropertyImage(int id, PropertyImageUpdateDTO propertyImageUpdateDTO)
         {
-            if (id != propertyImage.PropertyImageId)
+            if (id != propertyImageUpdateDTO.PropertyImageId)
             {
-                return BadRequest();
+                return BadRequest(new { message = "Mismatched property image ID." });
             }
 
-            _context.Entry(propertyImage).State = EntityState.Modified;
+            var existingPropertyImage = await _genericRepositories.SelectbyId<PropertyImage>(id);
+            if (existingPropertyImage == null)
+            {
+                return NotFound(new { message = "PropertyImage not found." });
+            }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PropertyImageExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _mapper.Map(propertyImageUpdateDTO, existingPropertyImage);
+            await _genericRepositories.UpdatebyId(id, existingPropertyImage);
 
             return NoContent();
         }
 
         // POST: api/PropertyImages
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<PropertyImage>> PostPropertyImage(PropertyImage propertyImage)
+        public async Task<ActionResult<PropertyImageReadDTO>> PostPropertyImage(PropertyImageCreateDTO propertyImageCreateDTO)
         {
-            _context.PropertyImages.Add(propertyImage);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetPropertyImage", new { id = propertyImage.PropertyImageId }, propertyImage);
+            var propertyImage = _mapper.Map<PropertyImage>(propertyImageCreateDTO);
+            await _genericRepositories.Create(propertyImage);
+            return CreatedAtAction(nameof(GetPropertyImage), new { id = propertyImage.PropertyImageId }, _mapper.Map<PropertyImageReadDTO>(propertyImage));
         }
 
         // DELETE: api/PropertyImages/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePropertyImage(int id)
         {
-            var propertyImage = await _context.PropertyImages.FindAsync(id);
+            var propertyImage = await _genericRepositories.SelectbyId<PropertyImage>(id);
             if (propertyImage == null)
             {
-                return NotFound();
+                return NotFound(new { message = "PropertyImage not found." });
             }
 
-            _context.PropertyImages.Remove(propertyImage);
-            await _context.SaveChangesAsync();
+            await _genericRepositories.DeleteById<PropertyImage>(id);
 
             return NoContent();
-        }
-
-        private bool PropertyImageExists(int id)
-        {
-            return _context.PropertyImages.Any(e => e.PropertyImageId == id);
         }
     }
 }

@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using GharBhada.Data;
-using GharBhada.Models;
 using Microsoft.AspNetCore.Authorization;
+using AutoMapper;
+using GharBhada.Repositories.GenericRepositories;
+using GharBhada.Models;
+using GharBhada.DTOs.PropertyDTOs;
 
 namespace GharBhada.Controllers
 {
@@ -16,95 +16,78 @@ namespace GharBhada.Controllers
     [ApiController]
     public class PropertiesController : ControllerBase
     {
-        private readonly GharBhadaContext _context;
+        private readonly IMapper _mapper;
+        private readonly IGenericRepositories _genericRepositories;
 
-        public PropertiesController(GharBhadaContext context)
+        public PropertiesController(IMapper mapper, IGenericRepositories genericRepositories)
         {
-            _context = context;
+            _mapper = mapper;
+            _genericRepositories = genericRepositories;
         }
 
         // GET: api/Properties
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Property>>> GetProperties()
+        public async Task<ActionResult<IEnumerable<PropertyReadDTO>>> GetProperties()
         {
-            return await _context.Properties.ToListAsync();
+            var properties = await _genericRepositories.SelectAll<Property>();
+            return Ok(_mapper.Map<IEnumerable<PropertyReadDTO>>(properties));
         }
 
         // GET: api/Properties/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Property>> GetProperty(int id)
+        public async Task<ActionResult<PropertyReadDTO>> GetProperty(int id)
         {
-            var @property = await _context.Properties.FindAsync(id);
-
-            if (@property == null)
+            var property = await _genericRepositories.SelectbyId<Property>(id);
+            if (property == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Property not found." });
             }
-
-            return @property;
+            return Ok(_mapper.Map<PropertyReadDTO>(property));
         }
 
         // PUT: api/Properties/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProperty(int id, Property @property)
+        public async Task<IActionResult> PutProperty(int id, PropertyUpdateDTO propertyUpdateDTO)
         {
-            if (id != @property.PropertyId)
+            if (id != propertyUpdateDTO.PropertyId)
             {
-                return BadRequest();
+                return BadRequest(new { message = "Mismatched property ID." });
             }
 
-            _context.Entry(@property).State = EntityState.Modified;
+            var existingProperty = await _genericRepositories.SelectbyId<Property>(id);
+            if (existingProperty == null)
+            {
+                return NotFound(new { message = "Property not found." });
+            }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PropertyExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _mapper.Map(propertyUpdateDTO, existingProperty);
+            await _genericRepositories.UpdatebyId(id, existingProperty);
 
             return NoContent();
         }
 
         // POST: api/Properties
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Property>> PostProperty(Property @property)
+        public async Task<ActionResult<PropertyReadDTO>> PostProperty(PropertyCreateDTO propertyCreateDTO)
         {
-            _context.Properties.Add(@property);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetProperty", new { id = @property.PropertyId }, @property);
+            var property = _mapper.Map<Property>(propertyCreateDTO);
+            await _genericRepositories.Create(property);
+            return CreatedAtAction(nameof(GetProperty), new { id = property.PropertyId }, _mapper.Map<PropertyReadDTO>(property));
         }
 
         // DELETE: api/Properties/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProperty(int id)
         {
-            var @property = await _context.Properties.FindAsync(id);
-            if (@property == null)
+            var property = await _genericRepositories.SelectbyId<Property>(id);
+            if (property == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Property not found." });
             }
 
-            _context.Properties.Remove(@property);
-            await _context.SaveChangesAsync();
+            await _genericRepositories.DeleteById<Property>(id);
 
             return NoContent();
-        }
-
-        private bool PropertyExists(int id)
-        {
-            return _context.Properties.Any(e => e.PropertyId == id);
         }
     }
 }

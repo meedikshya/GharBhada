@@ -6,13 +6,10 @@ namespace GharBhada.Models
 {
     public class Favourite
     {
-        [Key]
         public int FavouriteId { get; set; }
 
-        [ForeignKey("User")]
         public int UserId { get; set; }
 
-        [ForeignKey("Property")]
         public int PropertyId { get; set; }
 
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

@@ -65,7 +65,7 @@ namespace GharBhada.Data
             // Define primary key for MoveInAssistance and map to table "moveinassistance"
             modelBuilder.Entity<MoveInAssistance>()
                 .ToTable("moveinassistance")
-                .HasKey(mia => mia.AssistanceId);
+                .HasKey(mia => mia.MoveInAssistanceId);
         }
     }
 }

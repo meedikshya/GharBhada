@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using GharBhada.Data;
-using GharBhada.Models;
 using Microsoft.AspNetCore.Authorization;
+using AutoMapper;
+using GharBhada.Repositories.GenericRepositories;
+using GharBhada.Models;
+using GharBhada.DTOs.PaymentDTOs;
 
 namespace GharBhada.Controllers
 {
@@ -16,95 +15,78 @@ namespace GharBhada.Controllers
     [ApiController]
     public class PaymentsController : ControllerBase
     {
-        private readonly GharBhadaContext _context;
+        private readonly IMapper _mapper;
+        private readonly IGenericRepositories _genericRepositories;
 
-        public PaymentsController(GharBhadaContext context)
+        public PaymentsController(IMapper mapper, IGenericRepositories genericRepositories)
         {
-            _context = context;
+            _mapper = mapper;
+            _genericRepositories = genericRepositories;
         }
 
         // GET: api/Payments
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Payment>>> GetPayments()
+        public async Task<ActionResult<IEnumerable<PaymentReadDTO>>> GetPayments()
         {
-            return await _context.Payments.ToListAsync();
+            var payments = await _genericRepositories.SelectAll<Payment>();
+            return Ok(_mapper.Map<IEnumerable<PaymentReadDTO>>(payments));
         }
 
         // GET: api/Payments/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Payment>> GetPayment(int id)
+        public async Task<ActionResult<PaymentReadDTO>> GetPayment(int id)
         {
-            var payment = await _context.Payments.FindAsync(id);
-
+            var payment = await _genericRepositories.SelectbyId<Payment>(id);
             if (payment == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Payment not found." });
             }
-
-            return payment;
+            return Ok(_mapper.Map<PaymentReadDTO>(payment));
         }
 
         // PUT: api/Payments/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPayment(int id, Payment payment)
+        public async Task<IActionResult> PutPayment(int id, PaymentUpdateDTO paymentUpdateDTO)
         {
-            if (id != payment.PaymentId)
+            if (id != paymentUpdateDTO.PaymentId)
             {
-                return BadRequest();
+                return BadRequest(new { message = "Mismatched payment ID." });
             }
 
-            _context.Entry(payment).State = EntityState.Modified;
+            var existingPayment = await _genericRepositories.SelectbyId<Payment>(id);
+            if (existingPayment == null)
+            {
+                return NotFound(new { message = "Payment not found." });
+            }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PaymentExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _mapper.Map(paymentUpdateDTO, existingPayment);
+            await _genericRepositories.UpdatebyId(id, existingPayment);
 
             return NoContent();
         }
 
         // POST: api/Payments
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Payment>> PostPayment(Payment payment)
+        public async Task<ActionResult<PaymentReadDTO>> PostPayment(PaymentCreateDTO paymentCreateDTO)
         {
-            _context.Payments.Add(payment);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetPayment", new { id = payment.PaymentId }, payment);
+            var payment = _mapper.Map<Payment>(paymentCreateDTO);
+            await _genericRepositories.Create(payment);
+            return CreatedAtAction(nameof(GetPayment), new { id = payment.PaymentId }, _mapper.Map<PaymentReadDTO>(payment));
         }
 
         // DELETE: api/Payments/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePayment(int id)
         {
-            var payment = await _context.Payments.FindAsync(id);
+            var payment = await _genericRepositories.SelectbyId<Payment>(id);
             if (payment == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Payment not found." });
             }
 
-            _context.Payments.Remove(payment);
-            await _context.SaveChangesAsync();
+            await _genericRepositories.DeleteById<Payment>(id);
 
             return NoContent();
-        }
-
-        private bool PaymentExists(int id)
-        {
-            return _context.Payments.Any(e => e.PaymentId == id);
         }
     }
 }
