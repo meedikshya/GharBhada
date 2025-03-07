@@ -1,26 +1,34 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using GharBhada.Data;
 using GharBhada.Models;
-using GharBhada.Repositories.GenericRepositories;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace GharBhada.Repositories.SpecificRepositories.AgreementRepositories
 {
     public class AgreementRepositories : IAgreementRepositories
     {
-        private readonly IGenericRepositories _genericRepositories;
+        private readonly GharBhadaContext _context;
 
-        public AgreementRepositories(IGenericRepositories genericRepositories)
+        public AgreementRepositories(GharBhadaContext context)
         {
-            _genericRepositories = genericRepositories;
+            _context = context;
         }
 
         public async Task<Agreement> GetAgreementByBookingIdAsync(int bookingId)
         {
-            var agreements = await _genericRepositories.SelectAll<Agreement>(a => a.BookingId == bookingId);
-            return agreements.FirstOrDefault();
+            return await _context.Agreements.FirstOrDefaultAsync(a => a.BookingId == bookingId);
         }
 
+        public async Task<List<Agreement>> GetAgreementsByUserIdAsync(int userId)
+        {
+            return await _context.Agreements.Where(a => a.RenterId == userId).ToListAsync();
+        }
 
+        public async Task<List<Agreement>> GetAgreementsByLandlordIdAsync(int landlordId)
+        {
+            return await _context.Agreements.Where(a => a.LandlordId == landlordId).ToListAsync();
+        }
     }
 }

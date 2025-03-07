@@ -60,6 +60,31 @@ namespace GharBhada.Controllers
             return Ok(_mapper.Map<AgreementReadDTO>(agreement));
         }
 
+        // GET: api/Agreements/User/5
+        [HttpGet("User/{userId}")]
+        public async Task<ActionResult<IEnumerable<AgreementReadDTO>>> GetAgreementsByUserId(int userId)
+        {
+            var agreements = await _agreementRepositories.GetAgreementsByUserIdAsync(userId);
+            if (agreements == null || agreements.Count == 0)
+            {
+                return NotFound(new { message = "No agreements found for this user." });
+            }
+            return Ok(_mapper.Map<IEnumerable<AgreementReadDTO>>(agreements));
+        }
+
+        // GET: api/Agreements/Landlord/5
+        [HttpGet("Landlord/{landlordId}")]
+        public async Task<ActionResult<IEnumerable<AgreementReadDTO>>> GetAgreementsByLandlordId(int landlordId)
+        {
+            var agreements = await _agreementRepositories.GetAgreementsByLandlordIdAsync(landlordId);
+            if (agreements == null || agreements.Count == 0)
+            {
+                return NotFound(new { message = "No agreements found for this landlord." });
+            }
+            return Ok(_mapper.Map<IEnumerable<AgreementReadDTO>>(agreements));
+        }
+
+
         // PUT: api/Agreements/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutAgreement(int id, AgreementUpdateDTO agreementUpdateDTO)

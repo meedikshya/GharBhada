@@ -1,12 +1,13 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using GharBhada.Models;
-
 
 namespace GharBhada.Repositories.SpecificRepositories.AgreementRepositories
 {
     public interface IAgreementRepositories
     {
         Task<Agreement> GetAgreementByBookingIdAsync(int bookingId);
-
-}
+        Task<List<Agreement>> GetAgreementsByUserIdAsync(int userId);
+        Task<List<Agreement>> GetAgreementsByLandlordIdAsync(int landlordId);
+    }
 }

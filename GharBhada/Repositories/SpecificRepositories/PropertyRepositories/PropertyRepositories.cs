@@ -1,6 +1,22 @@
-﻿namespace GharBhada.Repositories.SpecificRepositories.PropertyRepositories
+﻿using GharBhada.Data;
+using GharBhada.Models;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace GharBhada.Repositories.SpecificRepositories.PropertyRepositories
 {
-    public class PropertyRepositories: IPropertyRepositories
+    public class PropertyRepositories : IPropertyRepositories
     {
+        private readonly GharBhadaContext _context;
+
+        public PropertyRepositories(GharBhadaContext context)
+        {
+            _context = context;
+        }
+
+        public IEnumerable<Property> GetPropertiesByLandlordId(int landlordId)
+        {
+            return _context.Properties.Where(p => p.LandlordId == landlordId).ToList();
+        }
     }
 }

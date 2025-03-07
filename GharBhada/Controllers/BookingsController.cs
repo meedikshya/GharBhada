@@ -7,6 +7,7 @@ using GharBhada.Repositories.GenericRepositories;
 using GharBhada.Models;
 using AutoMapper;
 using GharBhada.DTOs.BookingDTOs;
+using GharBhada.Repositories.SpecificRepositories.BookingRepositories;
 
 namespace GharBhada.Controllers
 {
@@ -17,11 +18,13 @@ namespace GharBhada.Controllers
     {
         private readonly IMapper _mapper;
         private readonly IGenericRepositories _genericRepositories;
+        private readonly IBookingRepositories _bookingRepositories;
 
-        public BookingsController(IMapper mapper, IGenericRepositories genericRepositories)
+        public BookingsController(IMapper mapper, IGenericRepositories genericRepositories, IBookingRepositories bookingRepositories)
         {
             _mapper = mapper;
             _genericRepositories = genericRepositories;
+            _bookingRepositories = bookingRepositories;
         }
 
         // GET: api/Bookings
@@ -42,6 +45,18 @@ namespace GharBhada.Controllers
                 return NotFound(new { message = "Booking not found." });
             }
             return Ok(_mapper.Map<BookingReadDTO>(booking));
+        }
+
+        // GET: api/Bookings/User/5
+        [HttpGet("User/{userId}")]
+        public async Task<ActionResult<IEnumerable<BookingReadDTO>>> GetBookingsByUserId(int userId)
+        {
+            var bookings = await _bookingRepositories.GetBookingsByUserId(userId);
+            if (bookings == null || bookings.Count == 0)
+            {
+                return NotFound(new { message = "No bookings found for this user." });
+            }
+            return Ok(_mapper.Map<IEnumerable<BookingReadDTO>>(bookings));
         }
 
         // PUT: api/Bookings/5

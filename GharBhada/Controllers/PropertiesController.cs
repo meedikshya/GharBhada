@@ -8,6 +8,7 @@ using AutoMapper;
 using GharBhada.Repositories.GenericRepositories;
 using GharBhada.Models;
 using GharBhada.DTOs.PropertyDTOs;
+using GharBhada.Repositories.SpecificRepositories.PropertyRepositories;
 
 namespace GharBhada.Controllers
 {
@@ -18,11 +19,13 @@ namespace GharBhada.Controllers
     {
         private readonly IMapper _mapper;
         private readonly IGenericRepositories _genericRepositories;
+        private readonly IPropertyRepositories _propertyRepositories;
 
-        public PropertiesController(IMapper mapper, IGenericRepositories genericRepositories)
+        public PropertiesController(IMapper mapper, IGenericRepositories genericRepositories, IPropertyRepositories propertyRepositories)
         {
             _mapper = mapper;
             _genericRepositories = genericRepositories;
+            _propertyRepositories = propertyRepositories;
         }
 
         // GET: api/Properties
@@ -43,6 +46,18 @@ namespace GharBhada.Controllers
                 return NotFound(new { message = "Property not found." });
             }
             return Ok(_mapper.Map<PropertyReadDTO>(property));
+        }
+
+        // GET: api/Properties/Landlord/5
+        [HttpGet("Landlord/{landlordId}")]
+        public ActionResult<IEnumerable<PropertyReadDTO>> GetPropertiesByLandlordId(int landlordId)
+        {
+            var properties = _propertyRepositories.GetPropertiesByLandlordId(landlordId);
+            if (properties == null || !properties.Any())
+            {
+                return NotFound(new { message = "No properties found for this landlord." });
+            }
+            return Ok(_mapper.Map<IEnumerable<PropertyReadDTO>>(properties));
         }
 
         // PUT: api/Properties/5
