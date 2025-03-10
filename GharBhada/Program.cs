@@ -43,15 +43,18 @@ builder.Services.AddDbContext<GharBhadaContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 // Configure CORS
+
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(builder =>
-    {
-        builder.AllowAnyOrigin()
-               .AllowAnyMethod()
-               .AllowAnyHeader();
-    });
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
+            policy.AllowAnyOrigin() 
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
 });
+
 
 // **JWT Authentication Config**
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -126,6 +129,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors();
+
+app.UseCors("AllowAll");
+
 
 // **Enable Authentication and Authorization**
 app.UseAuthentication();

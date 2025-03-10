@@ -15,10 +15,13 @@ namespace GharBhada.Models
 
         public decimal Amount { get; set; }
 
-        public required string PaymentStatus { get; set; } 
+        public required string PaymentStatus { get; set; }
 
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime PaymentDate { get; set; } = DateTime.Now;
 
+        public string? TransactionId { get; set; }  
+        public string? ReferenceId { get; set; }    
+        public string? PaymentGateway { get; set; } 
     }
 }
