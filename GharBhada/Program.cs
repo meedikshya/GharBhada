@@ -1,5 +1,3 @@
-using FirebaseAdmin;
-using Google.Apis.Auth.OAuth2;
 using GharBhada.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -77,17 +75,6 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
-});
-
-var firebaseCredentialsPath = builder.Configuration["Firebase:CredentialsPath"];
-if (string.IsNullOrEmpty(firebaseCredentialsPath))
-{
-    throw new InvalidOperationException("Firebase credentials path is not configured.");
-}
-
-FirebaseApp.Create(new AppOptions()
-{
-    Credential = GoogleCredential.FromFile(firebaseCredentialsPath)
 });
 
 // Register IGenericRepositories with its implementation 
