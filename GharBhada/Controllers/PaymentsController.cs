@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using AutoMapper;
 using GharBhada.Repositories.GenericRepositories;
+using GharBhada.Repositories.SpecificRepositories.PaymentRepositories;
 using GharBhada.Models;
 using GharBhada.DTOs.PaymentDTOs;
 
@@ -17,11 +18,13 @@ namespace GharBhada.Controllers
     {
         private readonly IMapper _mapper;
         private readonly IGenericRepositories _genericRepositories;
+        private readonly IPaymentRepositories _paymentRepositories;
 
-        public PaymentsController(IMapper mapper, IGenericRepositories genericRepositories)
+        public PaymentsController(IMapper mapper, IGenericRepositories genericRepositories, IPaymentRepositories paymentRepositories)
         {
             _mapper = mapper;
             _genericRepositories = genericRepositories;
+            _paymentRepositories = paymentRepositories;
         }
 
         // GET: api/Payments
@@ -42,6 +45,14 @@ namespace GharBhada.Controllers
                 return NotFound(new { message = "Payment not found." });
             }
             return Ok(_mapper.Map<PaymentReadDTO>(payment));
+        }
+
+        // GET: api/Payments/completed-by-landlord/28
+        [HttpGet("completed-by-landlord/{landlordId}")]
+        public async Task<ActionResult<IEnumerable<PaymentReadDTO>>> GetCompletedPaymentsByLandlordId(int landlordId)
+        {
+            var payments = await _paymentRepositories.GetCompletedPaymentsByLandlordIdAsync(landlordId);
+            return Ok(_mapper.Map<IEnumerable<PaymentReadDTO>>(payments));
         }
 
         // PUT: api/Payments/5

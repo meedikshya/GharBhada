@@ -1,12 +1,9 @@
 using FirebaseAdmin;
-using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
 using GharBhada.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using AutoMapper;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using GharBhada.Repositories.GenericRepositories;
 using GharBhada.Repositories.SpecificRepositories.AgreementRepositories;
 using GharBhada.Repositories.SpecificRepositories.BookingRepositories;
@@ -28,21 +25,16 @@ builder.WebHost.ConfigureKestrel(options =>
     options.ListenAnyIP(8000);
 });
 
-// Add services to the container.
 builder.Services.AddControllers();
 
-// Configure AutoMapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-// Register AutoMapper and add the profile
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// Configure DbContext with MySQL
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<GharBhadaContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-// Configure CORS
 
 builder.Services.AddCors(options =>
 {
@@ -56,7 +48,6 @@ builder.Services.AddCors(options =>
 });
 
 
-// **JWT Authentication Config**
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var keyString = jwtSettings["Key"];
 
@@ -88,7 +79,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Firebase Initialization (using the service account key path from appsettings.json)
 var firebaseCredentialsPath = builder.Configuration["Firebase:CredentialsPath"];
 if (string.IsNullOrEmpty(firebaseCredentialsPath))
 {
