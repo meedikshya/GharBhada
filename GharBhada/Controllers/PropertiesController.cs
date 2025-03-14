@@ -9,6 +9,7 @@ using GharBhada.Repositories.GenericRepositories;
 using GharBhada.Models;
 using GharBhada.DTOs.PropertyDTOs;
 using GharBhada.Repositories.SpecificRepositories.PropertyRepositories;
+using GharBhada.Repositories.SpecificRepositories.PaymentRepositories;
 
 namespace GharBhada.Controllers
 {
@@ -20,12 +21,15 @@ namespace GharBhada.Controllers
         private readonly IMapper _mapper;
         private readonly IGenericRepositories _genericRepositories;
         private readonly IPropertyRepositories _propertyRepositories;
+        private readonly IPaymentRepositories _paymentRepositories;
 
-        public PropertiesController(IMapper mapper, IGenericRepositories genericRepositories, IPropertyRepositories propertyRepositories)
+
+        public PropertiesController(IMapper mapper, IGenericRepositories genericRepositories, IPropertyRepositories propertyRepositories, IPaymentRepositories paymentRepositories)
         {
             _mapper = mapper;
             _genericRepositories = genericRepositories;
             _propertyRepositories = propertyRepositories;
+            _paymentRepositories = paymentRepositories;
         }
 
         // GET: api/Properties
@@ -80,6 +84,21 @@ namespace GharBhada.Controllers
 
             return NoContent();
         }
+
+
+        // PUT: api/Properties/updateStatus/5
+        [HttpPut("updateStatus/{propertyId}")]
+        public async Task<IActionResult> UpdatePropertyStatus(int propertyId)
+        {
+            var isPaymentCompleted = await _paymentRepositories.IsPaymentCompletedForPropertyAsync(propertyId);
+            if (isPaymentCompleted)
+            {
+                await _propertyRepositories.UpdatePropertyStatusAsync(propertyId, "Rented");
+                return Ok(new { message = "Property status updated to Rented." });
+            }
+            return BadRequest(new { message = "No completed payment found for this property." });
+        }
+        
 
         // POST: api/Properties
         [HttpPost]

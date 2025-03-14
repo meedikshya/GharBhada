@@ -18,21 +18,44 @@ namespace GharBhada.Repositories.SpecificRepositories.PaymentRepositories
 
         public async Task<List<Payment>> GetCompletedPaymentsByLandlordIdAsync(int landlordId)
         {
-            return await (from p in _context.Payments
-                          join a in _context.Agreements on p.AgreementId equals a.AgreementId
-                          where p.PaymentStatus == "Completed" && a.LandlordId == landlordId
-                          select new Payment
-                          {
-                              PaymentId = p.PaymentId,
-                              AgreementId = p.AgreementId,
-                              RenterId = p.RenterId,
-                              Amount = p.Amount,
-                              PaymentStatus = p.PaymentStatus,
-                              PaymentDate = p.PaymentDate,
-                              TransactionId = p.TransactionId,
-                              ReferenceId = p.ReferenceId,
-                              PaymentGateway = p.PaymentGateway
-                          }).ToListAsync();
+            return await _context.Payments
+                .Join(_context.Agreements,
+                      payment => payment.AgreementId,
+                      agreement => agreement.AgreementId,
+                      (payment, agreement) => new { payment, agreement })
+                .Where(pa => pa.payment.PaymentStatus == "Completed" && pa.agreement.LandlordId == landlordId)
+                .Select(pa => new Payment
+                {
+                    PaymentId = pa.payment.PaymentId,
+                    AgreementId = pa.payment.AgreementId,
+                    RenterId = pa.payment.RenterId,
+                    Amount = pa.payment.Amount,
+                    PaymentStatus = pa.payment.PaymentStatus,
+                    PaymentDate = pa.payment.PaymentDate,
+                    TransactionId = pa.payment.TransactionId,
+                    ReferenceId = pa.payment.ReferenceId,
+                    PaymentGateway = pa.payment.PaymentGateway
+                })
+                .ToListAsync();
         }
+
+        public async Task<List<Payment>> GetPaymentsByAgreementIdAsync(int agreementId, string status)
+        {
+            return await _context.Payments
+                .Where(p => p.AgreementId == agreementId && p.PaymentStatus == status)
+                .ToListAsync();
+        }
+
+        public async Task<bool> IsPaymentCompletedForPropertyAsync(int propertyId)
+        {
+            return await _context.Payments
+                .Join(_context.Agreements,
+                      payment => payment.AgreementId,
+                      agreement => agreement.AgreementId,
+                      (payment, agreement) => new { payment, agreement })
+                .Where(pa => pa.agreement.BookingId == propertyId && pa.payment.PaymentStatus == "Completed")
+                .AnyAsync();
     }
+
+}
 }

@@ -55,6 +55,19 @@ namespace GharBhada.Controllers
             return Ok(_mapper.Map<IEnumerable<PaymentReadDTO>>(payments));
         }
 
+
+        // GET: api/Payments/byAgreementId/5?status=Completed
+        [HttpGet("byAgreementId/{agreementId}")]
+        public async Task<ActionResult<IEnumerable<PaymentReadDTO>>> GetPaymentsByAgreementId(int agreementId, [FromQuery] string status)
+        {
+            var payments = await _paymentRepositories.GetPaymentsByAgreementIdAsync(agreementId, status);
+            if (payments == null || payments.Count == 0)
+            {
+                return Ok();
+            }
+            return Ok(_mapper.Map<IEnumerable<PaymentReadDTO>>(payments));
+        }
+
         // PUT: api/Payments/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutPayment(int id, PaymentUpdateDTO paymentUpdateDTO)

@@ -55,7 +55,7 @@ namespace GharBhada.Controllers
             var agreement = await _agreementRepositories.GetAgreementByBookingIdAsync(bookingId);
             if (agreement == null)
             {
-                return NotFound(new { message = "No agreement found for the given booking ID." });
+                return Ok();
             }
             return Ok(_mapper.Map<AgreementReadDTO>(agreement));
         }

@@ -1,9 +1,6 @@
-﻿using FirebaseAdmin.Auth;
-using GharBhada.Data;
+﻿using GharBhada.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
 
 namespace GharBhada.Controllers
 {
@@ -27,10 +24,8 @@ namespace GharBhada.Controllers
         {
             try
             {
-                // Log the received email for debugging
                 _logger.LogInformation("Received email: {Email}", request.Email);
 
-                // Find the user in the database
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
 
                 if (user == null)
@@ -39,13 +34,10 @@ namespace GharBhada.Controllers
                     return Unauthorized(new { Message = "User not found." });
                 }
 
-                // Log the found user ID for debugging
                 _logger.LogInformation("User found with ID: {UserId}", user.UserId);
 
-                // Generate a custom JWT token
-                var token = _tokenService.GenerateToken(user.UserId.ToString(), request.Email);
+                var token = _tokenService.GenerateToken(user.UserId.ToString(), request.Email, user.UserRole);
 
-                // Log the generated token for debugging
                 _logger.LogInformation("Generated JWT Token: {Token}", token);
 
                 return Ok(new { Token = token });

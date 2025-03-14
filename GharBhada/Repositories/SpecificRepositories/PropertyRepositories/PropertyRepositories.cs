@@ -18,5 +18,15 @@ namespace GharBhada.Repositories.SpecificRepositories.PropertyRepositories
         {
             return _context.Properties.Where(p => p.LandlordId == landlordId).ToList();
         }
+
+        public async Task UpdatePropertyStatusAsync(int propertyId, string status)
+        {
+            var property = await _context.Properties.FindAsync(propertyId);
+            if (property != null)
+            {
+                property.Status = status;
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

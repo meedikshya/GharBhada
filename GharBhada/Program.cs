@@ -33,18 +33,16 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<GharBhadaContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
         policy =>
         {
-            policy.AllowAnyOrigin() 
+            policy.AllowAnyOrigin()
                   .AllowAnyMethod()
                   .AllowAnyHeader();
         });
 });
-
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var keyString = jwtSettings["Key"];
@@ -77,6 +75,14 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Add Authorization
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("Renter", policy => policy.RequireRole("Renter"));
+    options.AddPolicy("Landlord", policy => policy.RequireRole("Landlord"));
+});
+
 // Register IGenericRepositories with its implementation 
 builder.Services.AddScoped<IGenericRepositories, GenericRepositories>();
 builder.Services.AddScoped<IAgreementRepositories, AgreementRepositories>();
@@ -89,11 +95,12 @@ builder.Services.AddScoped<IUserRepositories, UserRepositories>();
 builder.Services.AddScoped<IUserDetailRepositories, UserDetailRepositories>();
 builder.Services.AddScoped<IPropertyRepositories, PropertyRepositories>();
 
+// Register JwtTokenService
+builder.Services.AddScoped<JwtTokenService>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-builder.Services.AddScoped<JwtTokenService>();
 
 var app = builder.Build();
 
@@ -105,12 +112,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors();
-
 app.UseCors("AllowAll");
 
-
-// **Enable Authentication and Authorization**
+// Enable Authentication and Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
