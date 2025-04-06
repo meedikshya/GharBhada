@@ -85,6 +85,23 @@ namespace GharBhada.Controllers
         }
 
 
+        // GET: api/Agreements/total-count
+        [HttpGet("total-count")]
+        public async Task<ActionResult<int>> GetTotalAgreementCount()
+        {
+            var count = await _agreementRepositories.GetTotalAgreementCountAsync();
+            return Ok(count);
+        }
+
+        // GET: api/Agreements/approved-count
+        [HttpGet("approved-count")]
+        public async Task<ActionResult<int>> GetApprovedAgreementCount()
+        {
+            var count = await _agreementRepositories.GetApprovedAgreementCountAsync();
+            return Ok(count);
+        }
+
+
         // PUT: api/Agreements/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutAgreement(int id, AgreementUpdateDTO agreementUpdateDTO)

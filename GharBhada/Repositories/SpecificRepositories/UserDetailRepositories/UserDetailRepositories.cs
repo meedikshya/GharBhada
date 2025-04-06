@@ -20,5 +20,7 @@ namespace GharBhada.Repositories.SpecificRepositories.UserDetailRepositories
         {
             return await _genericRepositories.SelectAll<UserDetail>(u => u.UserId == userId);
         }
+
+        
     }
 }

@@ -80,6 +80,30 @@ namespace GharBhada.Controllers
             return Ok(_mapper.Map<UserReadDTO>(user));
         }
 
+        // GET: api/Users/total-count
+        [HttpGet("total-count")]
+        public async Task<ActionResult<int>> GetTotalUserCount()
+        {
+            var totalCount = await _userRepositories.GetTotalUserCount();
+            return Ok(totalCount);
+        }
+
+        // GET: api/Users/total-landlords
+        [HttpGet("total-landlords")]
+        public async Task<ActionResult<int>> GetTotalLandlordCount()
+        {
+            var totalCount = await _userRepositories.GetTotalLandlordCount();
+            return Ok(totalCount);
+        }
+
+        // GET: api/Users/total-renters
+        [HttpGet("total-renters")]
+        public async Task<ActionResult<int>> GetTotalRenterCount()
+        {
+            var totalCount = await _userRepositories.GetTotalRenterCount();
+            return Ok(totalCount);
+        }
+
         // PUT: api/Users/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, UserUpdateDTO userUpdateDTO)

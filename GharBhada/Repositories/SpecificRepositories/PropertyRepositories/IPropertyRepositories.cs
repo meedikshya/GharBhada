@@ -7,5 +7,6 @@ namespace GharBhada.Repositories.SpecificRepositories.PropertyRepositories
     {
         IEnumerable<Property> GetPropertiesByLandlordId(int landlordId);
         Task UpdatePropertyStatusAsync(int propertyId, string status);
+        Task<int> GetTotalPropertyCountAsync();
     }
 }

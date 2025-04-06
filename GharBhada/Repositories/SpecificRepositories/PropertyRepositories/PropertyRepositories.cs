@@ -2,6 +2,8 @@
 using GharBhada.Models;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace GharBhada.Repositories.SpecificRepositories.PropertyRepositories
 {
@@ -27,6 +29,11 @@ namespace GharBhada.Repositories.SpecificRepositories.PropertyRepositories
                 property.Status = status;
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<int> GetTotalPropertyCountAsync()
+        {
+            return await _context.Properties.CountAsync();
         }
     }
 }

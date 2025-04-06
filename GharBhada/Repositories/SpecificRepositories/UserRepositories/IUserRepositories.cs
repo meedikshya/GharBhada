@@ -7,5 +7,8 @@ namespace GharBhada.Repositories.SpecificRepositories.UserRepositories
     {
         Task<int> GetUserIdByFirebaseId(string firebaseUserId);
         Task<string> GetFirebaseUserIdByUserId(int userId);
+        Task<int> GetTotalUserCount();
+        Task<int> GetTotalLandlordCount();
+        Task<int> GetTotalRenterCount();
     }
 }

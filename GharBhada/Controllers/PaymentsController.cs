@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,7 @@ using GharBhada.DTOs.PaymentDTOs;
 
 namespace GharBhada.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class PaymentsController : ControllerBase
@@ -55,6 +56,26 @@ namespace GharBhada.Controllers
             return Ok(_mapper.Map<IEnumerable<PaymentReadDTO>>(payments));
         }
 
+        // GET: api/Payments/completed-by-renter/30
+        [HttpGet("completed-by-renter/{renterId}")]
+        public async Task<ActionResult<IEnumerable<PaymentReadDTO>>> GetCompletedPaymentsByRenterId(int renterId)
+        {
+            var payments = await _paymentRepositories.GetCompletedPaymentsByRenterIdAsync(renterId);
+            return Ok(_mapper.Map<IEnumerable<PaymentReadDTO>>(payments));
+        }
+
+        // GET: api/Payments/completed-by-renter-with-property/30
+        [HttpGet("completed-by-renter-with-property/{renterId}")]
+        public async Task<ActionResult<IEnumerable<object>>> GetCompletedPaymentsWithPropertyByRenterId(int renterId)
+        {
+            var paymentsWithProperties = await _paymentRepositories.GetCompletedPaymentsWithPropertyByRenterIdAsync(renterId);
+            var result = paymentsWithProperties.Select(pwp => new
+            {
+                Payment = _mapper.Map<PaymentReadDTO>(pwp.Payment),
+                Property = pwp.Property
+            });
+            return Ok(result);
+        }
 
         // GET: api/Payments/byAgreementId/5?status=Completed
         [HttpGet("byAgreementId/{agreementId}")]
@@ -66,6 +87,41 @@ namespace GharBhada.Controllers
                 return Ok();
             }
             return Ok(_mapper.Map<IEnumerable<PaymentReadDTO>>(payments));
+        }
+
+        // GET: api/Payments/properties-with-completed-payments
+        [HttpGet("properties-with-completed-payments")]
+        public async Task<ActionResult<IEnumerable<Property>>> GetPropertiesWithCompletedPayments()
+        {
+            var properties = await _paymentRepositories.GetPropertiesWithCompletedPaymentsAsync();
+            return Ok(properties);
+        }
+
+        // GET: api/Payments/completed-payment-count
+        [HttpGet("completed-payment-count")]
+        public async Task<ActionResult<int>> GetCompletedPaymentCount()
+        {
+            var count = await _paymentRepositories.GetCompletedPaymentCountAsync();
+            return Ok(count);
+        }
+
+        // GET: api/Payments/completed-with-details
+        [HttpGet("completed-with-details")]
+        public async Task<ActionResult<IEnumerable<PaymentReadDTO>>> GetCompletedPaymentsWithDetails()
+        {
+            var payments = await _paymentRepositories.GetCompletedPaymentsWithDetailsAsync();
+            if (payments == null || payments.Count == 0)
+            {
+                return NotFound(new { message = "No completed payments found." });
+            }
+            var result = payments.Select(p => new
+            {
+                Payment = _mapper.Map<PaymentReadDTO>(p.Payment),
+                Property = p.Property,
+                RenterId = p.RenterId,
+                LandlordId = p.LandlordId
+            });
+            return Ok(result);
         }
 
         // PUT: api/Payments/5

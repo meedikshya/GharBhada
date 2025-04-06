@@ -54,9 +54,25 @@ namespace GharBhada.Controllers
             var bookings = await _bookingRepositories.GetBookingsByUserId(userId);
             if (bookings == null || bookings.Count == 0)
             {
-                return NotFound(new { message = "No bookings found for this user." });
+                return Ok(new { message = "No bookings found for this user." });
             }
             return Ok(_mapper.Map<IEnumerable<BookingReadDTO>>(bookings));
+        }
+
+        // GET: api/Bookings/accepted-count
+        [HttpGet("accepted-count")]
+        public async Task<ActionResult<int>> GetAcceptedBookingCount()
+        {
+            var count = await _bookingRepositories.GetAcceptedBookingCountAsync();
+            return Ok(count);
+        }
+
+        // GET: api/Bookings/total-count
+        [HttpGet("total-count")]
+        public async Task<ActionResult<int>> GetTotalBookingCount()
+        {
+            var count = await _bookingRepositories.GetTotalBookingCountAsync();
+            return Ok(count);
         }
 
         // PUT: api/Bookings/5

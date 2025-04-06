@@ -30,5 +30,15 @@ namespace GharBhada.Repositories.SpecificRepositories.AgreementRepositories
         {
             return await _context.Agreements.Where(a => a.LandlordId == landlordId).ToListAsync();
         }
+
+        public async Task<int> GetTotalAgreementCountAsync()
+        {
+            return await _context.Agreements.CountAsync();
+        }
+
+        public async Task<int> GetApprovedAgreementCountAsync()
+        {
+            return await _context.Agreements.CountAsync(a => a.Status == "Approved");
+        }
     }
 }

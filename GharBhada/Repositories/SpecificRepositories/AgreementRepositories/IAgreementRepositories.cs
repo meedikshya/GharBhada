@@ -9,5 +9,7 @@ namespace GharBhada.Repositories.SpecificRepositories.AgreementRepositories
         Task<Agreement> GetAgreementByBookingIdAsync(int bookingId);
         Task<List<Agreement>> GetAgreementsByUserIdAsync(int userId);
         Task<List<Agreement>> GetAgreementsByLandlordIdAsync(int landlordId);
+        Task<int> GetTotalAgreementCountAsync();
+        Task<int> GetApprovedAgreementCountAsync();
     }
 }

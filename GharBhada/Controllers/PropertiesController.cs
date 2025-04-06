@@ -23,7 +23,6 @@ namespace GharBhada.Controllers
         private readonly IPropertyRepositories _propertyRepositories;
         private readonly IPaymentRepositories _paymentRepositories;
 
-
         public PropertiesController(IMapper mapper, IGenericRepositories genericRepositories, IPropertyRepositories propertyRepositories, IPaymentRepositories paymentRepositories)
         {
             _mapper = mapper;
@@ -64,6 +63,14 @@ namespace GharBhada.Controllers
             return Ok(_mapper.Map<IEnumerable<PropertyReadDTO>>(properties));
         }
 
+        // GET: api/Properties/total-count
+        [HttpGet("total-count")]
+        public async Task<ActionResult<int>> GetTotalPropertyCount()
+        {
+            var totalCount = await _propertyRepositories.GetTotalPropertyCountAsync();
+            return Ok(totalCount);
+        }
+
         // PUT: api/Properties/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProperty(int id, PropertyUpdateDTO propertyUpdateDTO)
@@ -85,7 +92,6 @@ namespace GharBhada.Controllers
             return NoContent();
         }
 
-
         // PUT: api/Properties/updateStatus/5
         [HttpPut("updateStatus/{propertyId}")]
         public async Task<IActionResult> UpdatePropertyStatus(int propertyId)
@@ -98,7 +104,6 @@ namespace GharBhada.Controllers
             }
             return BadRequest(new { message = "No completed payment found for this property." });
         }
-        
 
         // POST: api/Properties
         [HttpPost]
