@@ -75,6 +75,18 @@ namespace GharBhada.Controllers
             return Ok(count);
         }
 
+        // GET: api/Bookings/Landlord/5
+        [HttpGet("Landlord/{landlordId}")]
+        public async Task<ActionResult<IEnumerable<BookingReadDTO>>> GetBookingsByLandlordId(int landlordId)
+        {
+            var bookings = await _bookingRepositories.GetBookingsByLandlordIdAsync(landlordId);
+            if (bookings == null || bookings.Count == 0)
+            {
+                return Ok(new { message = "No bookings found for this landlord." });
+            }
+            return Ok(_mapper.Map<IEnumerable<BookingReadDTO>>(bookings));
+        }
+
         // PUT: api/Bookings/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutBooking(int id, BookingUpdateDTO bookingUpdateDTO)

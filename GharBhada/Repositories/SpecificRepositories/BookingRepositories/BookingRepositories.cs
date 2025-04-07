@@ -30,5 +30,17 @@ namespace GharBhada.Repositories.SpecificRepositories.BookingRepositories
         {
             return await _context.Bookings.CountAsync();
         }
+
+        public async Task<List<Booking>> GetBookingsByLandlordIdAsync(int landlordId)
+        {
+            return await _context.Bookings
+                .Join(_context.Agreements,
+                      booking => booking.BookingId,
+                      agreement => agreement.BookingId,
+                      (booking, agreement) => new { booking, agreement })
+                .Where(ba => ba.agreement.LandlordId == landlordId)
+                .Select(ba => ba.booking)
+                .ToListAsync();
+        }
     }
 }
