@@ -1,6 +1,7 @@
 ﻿using GharBhada.Data;
 using GharBhada.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -39,6 +40,20 @@ namespace GharBhada.Repositories.SpecificRepositories.AgreementRepositories
         public async Task<int> GetApprovedAgreementCountAsync()
         {
             return await _context.Agreements.CountAsync(a => a.Status == "Approved");
+        }
+
+        public async Task<List<Agreement>> GetExpiredAgreementsAsync()
+        {
+            return await _context.Agreements
+                .Where(a => a.EndDate < DateTime.UtcNow)
+                .ToListAsync();
+        }
+
+        public async Task<List<Agreement>> GetExpiredAgreementsByRenterIdAsync(int renterId)
+        {
+            return await _context.Agreements
+                .Where(a => a.RenterId == renterId && a.EndDate < DateTime.UtcNow)
+                .ToListAsync();
         }
     }
 }

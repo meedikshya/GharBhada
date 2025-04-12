@@ -12,7 +12,7 @@ using GharBhada.DTOs;
 
 namespace GharBhada.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AgreementsController : ControllerBase
@@ -99,6 +99,30 @@ namespace GharBhada.Controllers
         {
             var count = await _agreementRepositories.GetApprovedAgreementCountAsync();
             return Ok(count);
+        }
+
+        // GET: api/Agreements/expired
+        [HttpGet("expired")]
+        public async Task<ActionResult<IEnumerable<AgreementReadDTO>>> GetExpiredAgreements()
+        {
+            var agreements = await _agreementRepositories.GetExpiredAgreementsAsync();
+            if (agreements == null || agreements.Count == 0)
+            {
+                return NotFound(new { message = "No expired agreements found." });
+            }
+            return Ok(_mapper.Map<IEnumerable<AgreementReadDTO>>(agreements));
+        }
+
+        // GET: api/Agreements/expired-by-renter/5
+        [HttpGet("expired-by-renter/{renterId}")]
+        public async Task<ActionResult<IEnumerable<AgreementReadDTO>>> GetExpiredAgreementsByRenterId(int renterId)
+        {
+            var agreements = await _agreementRepositories.GetExpiredAgreementsByRenterIdAsync(renterId);
+            if (agreements == null || agreements.Count == 0)
+            {
+                return NotFound(new { message = "No expired agreements found for this renter." });
+            }
+            return Ok(_mapper.Map<IEnumerable<AgreementReadDTO>>(agreements));
         }
 
 
