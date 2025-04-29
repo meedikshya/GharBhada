@@ -95,6 +95,9 @@ builder.Services.AddScoped<IUserRepositories, UserRepositories>();
 builder.Services.AddScoped<IUserDetailRepositories, UserDetailRepositories>();
 builder.Services.AddScoped<IPropertyRepositories, PropertyRepositories>();
 
+// Add this to your existing service registration in Program.cs
+builder.Services.AddHostedService<ExpiredAgreementService>();
+
 // Register JwtTokenService
 builder.Services.AddScoped<JwtTokenService>();
 

@@ -12,7 +12,7 @@ using GharBhada.DTOs;
 
 namespace GharBhada.Controllers
 {
-    //[Authorize]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AgreementsController : ControllerBase
@@ -43,7 +43,7 @@ namespace GharBhada.Controllers
             var agreement = await _genericRepositories.SelectbyId<Agreement>(id);
             if (agreement == null)
             {
-                return NotFound(new { message = "Agreement not found." });
+                return Ok(new { message = "Agreement not found." });
             }
             return Ok(_mapper.Map<AgreementReadDTO>(agreement));
         }
@@ -79,7 +79,7 @@ namespace GharBhada.Controllers
             var agreements = await _agreementRepositories.GetAgreementsByLandlordIdAsync(landlordId);
             if (agreements == null || agreements.Count == 0)
             {
-                return NotFound(new { message = "No agreements found for this landlord." });
+                return Ok(new { message = "No agreements found for this landlord." });
             }
             return Ok(_mapper.Map<IEnumerable<AgreementReadDTO>>(agreements));
         }
@@ -108,7 +108,7 @@ namespace GharBhada.Controllers
             var agreements = await _agreementRepositories.GetExpiredAgreementsAsync();
             if (agreements == null || agreements.Count == 0)
             {
-                return NotFound(new { message = "No expired agreements found." });
+                return Ok(new { message = "No expired agreements found." });
             }
             return Ok(_mapper.Map<IEnumerable<AgreementReadDTO>>(agreements));
         }
@@ -120,7 +120,7 @@ namespace GharBhada.Controllers
             var agreements = await _agreementRepositories.GetExpiredAgreementsByRenterIdAsync(renterId);
             if (agreements == null || agreements.Count == 0)
             {
-                return NotFound(new { message = "No expired agreements found for this renter." });
+                return Ok(new { message = "No expired agreements found for this renter." });
             }
             return Ok(_mapper.Map<IEnumerable<AgreementReadDTO>>(agreements));
         }
@@ -138,7 +138,7 @@ namespace GharBhada.Controllers
             var existingAgreement = await _genericRepositories.SelectbyId<Agreement>(id);
             if (existingAgreement == null)
             {
-                return NotFound(new { message = "Agreement not found." });
+                return Ok(new { message = "Agreement not found." });
             }
 
             _mapper.Map(agreementUpdateDTO, existingAgreement);
@@ -146,6 +146,21 @@ namespace GharBhada.Controllers
 
             return NoContent();
         }
+
+        [HttpPost("trigger-expired-check")]
+        public async Task<IActionResult> TriggerExpiredCheck()
+        {
+            try
+            {
+                await _agreementRepositories.UpdatePropertyStatusForAllExpiredAgreementsAsync();
+                return Ok(new { message = "Expired agreements updated, bookings status updated, and property statuses updated successfully." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
 
         // POST: api/Agreements
         [HttpPost]
@@ -156,6 +171,7 @@ namespace GharBhada.Controllers
 
             return CreatedAtAction(nameof(GetAgreement), new { id = agreement.AgreementId }, _mapper.Map<AgreementReadDTO>(agreement));
         }
+
 
         // DELETE: api/Agreements/5
         [HttpDelete("{id}")]

@@ -46,7 +46,7 @@ namespace GharBhada.Controllers
             var property = await _genericRepositories.SelectbyId<Property>(id);
             if (property == null)
             {
-                return NotFound(new { message = "Property not found." });
+                return Ok(new { message = "Property not found." });
             }
             return Ok(_mapper.Map<PropertyReadDTO>(property));
         }
@@ -58,7 +58,7 @@ namespace GharBhada.Controllers
             var properties = _propertyRepositories.GetPropertiesByLandlordId(landlordId);
             if (properties == null || !properties.Any())
             {
-                return NotFound(new { message = "No properties found for this landlord." });
+                return Ok(new { message = "No properties found for this landlord." });
             }
             return Ok(_mapper.Map<IEnumerable<PropertyReadDTO>>(properties));
         }
@@ -83,7 +83,7 @@ namespace GharBhada.Controllers
             var existingProperty = await _genericRepositories.SelectbyId<Property>(id);
             if (existingProperty == null)
             {
-                return NotFound(new { message = "Property not found." });
+                return Ok(new { message = "Property not found." });
             }
 
             _mapper.Map(propertyUpdateDTO, existingProperty);
@@ -121,7 +121,7 @@ namespace GharBhada.Controllers
             var property = await _genericRepositories.SelectbyId<Property>(id);
             if (property == null)
             {
-                return NotFound(new { message = "Property not found." });
+                return Ok(new { message = "Property not found." });
             }
 
             await _genericRepositories.DeleteById<Property>(id);

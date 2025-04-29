@@ -13,5 +13,6 @@ namespace GharBhada.Repositories.SpecificRepositories.AgreementRepositories
         Task<int> GetApprovedAgreementCountAsync();
         Task<List<Agreement>> GetExpiredAgreementsAsync();
         Task<List<Agreement>> GetExpiredAgreementsByRenterIdAsync(int renterId);
+        Task UpdatePropertyStatusForAllExpiredAgreementsAsync();
     }
 }

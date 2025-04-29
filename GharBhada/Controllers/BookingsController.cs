@@ -42,7 +42,7 @@ namespace GharBhada.Controllers
             var booking = await _genericRepositories.SelectbyId<Booking>(id);
             if (booking == null)
             {
-                return NotFound(new { message = "Booking not found." });
+                return Ok(new { message = "Booking not found." });
             }
             return Ok(_mapper.Map<BookingReadDTO>(booking));
         }
@@ -99,7 +99,7 @@ namespace GharBhada.Controllers
             var existingBooking = await _genericRepositories.SelectbyId<Booking>(id);
             if (existingBooking == null)
             {
-                return NotFound(new { message = "Booking not found." });
+                return Ok(new { message = "Booking not found." });
             }
 
             _mapper.Map(bookingUpdateDTO, existingBooking);
@@ -124,7 +124,7 @@ namespace GharBhada.Controllers
             var booking = await _genericRepositories.SelectbyId<Booking>(id);
             if (booking == null)
             {
-                return NotFound(new { message = "Booking not found." });
+                return Ok(new { message = "Booking not found." });
             }
 
             await _genericRepositories.DeleteById<Booking>(id);
